@@ -1,0 +1,36 @@
+apiVersion: logging.banzaicloud.com/v1alpha1
+kind: Fluentd
+metadata:
+  name: example-fluentd
+  labels:
+    release: test
+spec:
+  namespace: default
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path:   "/metrics"
+    prometheus.io/port:   "25000"
+  tls:
+    enabled: true
+    secretName: logging-fluentd
+    secretType: tls
+    sharedKey: asd
+  image:
+    tag: "v1.5.0"
+    repository: "banzaicloud/fluentd"
+    pullPolicy: "IfNotPresent"
+  volumeModImage:
+    tag: "latest"
+    repository: "busybox"
+    pullPolicy: "IfNotPresent"
+  configReloaderImage:
+    tag: "v0.2.2"
+    repository: "jimmidyson/configmap-reload"
+    pullPolicy: "IfNotPresent"
+  resources: {}
+  fluentdPvcSpec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 21Gi

@@ -1,0 +1,51 @@
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  name: root
+spec:
+  selfSigned: {}
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: logging-ca
+spec:
+  secretName: logging-ca
+  commonName: logging-ca
+  isCA: true
+  issuerRef:
+    name: root
+    kind: Issuer
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Issuer
+metadata:
+  name: logging-ca
+spec:
+  ca:
+    secretName: logging-ca
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: fluentd-certs
+spec:
+  secretName: logging-fluentd
+  commonName: logging-fluentd
+  issuerRef:
+    name: logging-ca
+    kind: Issuer
+  dnsNames:
+    - logging-fluentd:24240
+---
+apiVersion: certmanager.k8s.io/v1alpha1
+kind: Certificate
+metadata:
+  name: fluentbit-certs
+spec:
+  secretName: logging-fluentbit
+  commonName: logging-fluentbit
+  issuerRef:
+    name: logging-ca
+    kind: Issuer
+
