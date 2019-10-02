@@ -1,0 +1,23 @@
+run:
+    skip-dirs:
+        - pkg/model/filter
+        - pkg/model/output
+        - pkg/model/input
+
+linters-settings:
+    golint:
+        min-confidence: 0.1
+    goimports:
+        local-prefixes: github.com/banzaicloud/logging-operator
+
+linters:
+    enable-all: true
+    disable:
+        - funlen
+        - maligned
+
+        # Drives todos nuts
+        - godox
+
+service:
+    golangci-lint-version: 1.19.x

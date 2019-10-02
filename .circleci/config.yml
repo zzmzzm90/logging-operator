@@ -21,7 +21,7 @@ jobs:
             make check-fmt
 
       - run:
-          name: Run golint
+          name: Run linter
           command: |
             make lint
 
