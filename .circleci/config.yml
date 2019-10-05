@@ -11,6 +11,8 @@ jobs:
   build:
     docker:
       - image: circleci/golang:1.13
+        environment:
+          GOFLAG: -mod=readonly
 
     steps:
       - checkout
