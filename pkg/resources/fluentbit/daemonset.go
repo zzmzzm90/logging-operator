@@ -21,7 +21,6 @@ import (
 	"github.com/banzaicloud/logging-operator/pkg/k8sutil"
 	"github.com/banzaicloud/logging-operator/pkg/resources/templates"
 	"github.com/banzaicloud/logging-operator/pkg/sdk/util"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -43,8 +42,8 @@ func (r *Reconciler) daemonSet() (runtime.Object, k8sutil.DesiredState, error) {
 		})
 	}
 
-	labels := util.MergeLabels(r.Logging.Spec.FluentbitSpec.Labels, r.getFluentBitLabels())
-	meta := r.FluentbitObjectMeta(fluentbitDaemonSetName)
+	labels := util.MergeLabels(r.Logging.Labels, r.getFluentBitLabels())
+	meta := templates.FluentbitObjectMeta(r.Logging.QualifiedName(fluentbitDaemonSetName), labels, r.Logging)
 	podMeta := metav1.ObjectMeta{
 		Labels:      labels,
 		Annotations: r.Logging.Spec.FluentbitSpec.Annotations,
@@ -56,17 +55,16 @@ func (r *Reconciler) daemonSet() (runtime.Object, k8sutil.DesiredState, error) {
 		templates.Annotate(podMeta, "checksum/config", fmt.Sprintf("%x", h.Sum(nil)))
 	}
 
-	desired := &appsv1.DaemonSet{
+	return &appsv1.DaemonSet{
 		ObjectMeta: meta,
 		Spec: appsv1.DaemonSetSpec{
-			Selector: &metav1.LabelSelector{MatchLabels: util.MergeLabels(r.Logging.Spec.FluentbitSpec.Labels, r.getFluentBitLabels())},
+			Selector: &metav1.LabelSelector{MatchLabels: util.MergeLabels(r.Logging.Labels, r.getFluentBitLabels())},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: podMeta,
 				Spec: corev1.PodSpec{
 					ServiceAccountName: r.getServiceAccount(),
 					Volumes:            r.generateVolume(),
 					Tolerations:        r.Logging.Spec.FluentbitSpec.Tolerations,
-					PriorityClassName:  r.Logging.Spec.FluentbitSpec.PodPriorityClassName,
 					SecurityContext: &corev1.PodSecurityContext{
 						FSGroup:      r.Logging.Spec.FluentbitSpec.Security.PodSecurityContext.FSGroup,
 						RunAsNonRoot: r.Logging.Spec.FluentbitSpec.Security.PodSecurityContext.RunAsNonRoot,
@@ -93,9 +91,7 @@ func (r *Reconciler) daemonSet() (runtime.Object, k8sutil.DesiredState, error) {
 				},
 			},
 		},
-	}
-
-	return desired, k8sutil.StatePresent, nil
+	}, k8sutil.StatePresent, nil
 }
 
 func (r *Reconciler) generateVolumeMounts() (v []corev1.VolumeMount) {
@@ -104,6 +100,11 @@ func (r *Reconciler) generateVolumeMounts() (v []corev1.VolumeMount) {
 			Name:      "varlibcontainers",
 			ReadOnly:  true,
 			MountPath: "/var/lib/docker/containers",
+		},
+		{
+			Name:      "u01datadockercontainers",
+			ReadOnly:  true,
+			MountPath: "/u01/data/docker/containers",
 		},
 		{
 			Name:      TailPositionVolume,
@@ -159,6 +160,14 @@ func (r *Reconciler) generateVolume() (v []corev1.Volume) {
 			VolumeSource: corev1.VolumeSource{
 				HostPath: &corev1.HostPathVolumeSource{
 					Path: "/var/log",
+				},
+			},
+		},
+		{
+			Name: "u01datadockercontainers",
+			VolumeSource: corev1.VolumeSource{
+				HostPath: &corev1.HostPathVolumeSource{
+					Path: "/u01/data/docker/containers",
 				},
 			},
 		},
