@@ -1,0 +1,11 @@
+apiVersion: logging.banzaicloud.io/v1beta1
+kind: ClusterOutput
+metadata:
+  name: {{ include "logging-operator-logging.name" . }}-lumberjack
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "logging-operator-logging.labels" . | indent 4 }}
+spec:
+  lumberjack:
+    compartment: {{ .Values.lumberjack.compartment }}
+    namespace: {{ .Values.lumberjack.namespace }}
