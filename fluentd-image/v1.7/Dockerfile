@@ -66,6 +66,12 @@ RUN addgroup -S fluent && adduser -S -G fluent fluent \
 COPY fluent.conf /fluentd/etc/
 COPY entrypoint.sh /bin/
 
+COPY gems /home/fluent/gems
+COPY certs/missioncontrol-root-ca.crt /home/fluent/certs/missioncontrol-root-ca.crt
+RUN gem install --local /home/fluent/gems/oci-2.5.0.gem \
+  && gem install --local /home/fluent/gems/hydra_pika_client-1.0.0.gem \
+  && gem install --local /home/fluent/gems/fluent-plugin-lumberjack-1.0.0.gem
+COPY plugin/out_lumberjack.rb /fluentd/plugins/out_lumberjack.rb
 
 ENV FLUENTD_CONF="fluent.conf"
 
